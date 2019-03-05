@@ -29,7 +29,7 @@ def log_splitter(log):
     elif action == 'ClientBegin':
         client_begin()
     elif action == 'ClientDisconnect':
-        client_disconnect()
+        client_disconnect(action_info)
 
 
 def init_game():
@@ -79,8 +79,10 @@ def client_begin():
     print()
 
 
-def client_disconnect():
-    print()
+def client_disconnect(userinfo):
+    global active_players
+    key = userinfo.split('\n')[0]
+    active_players.pop(key, None)
 
 
 def item():
