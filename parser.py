@@ -1,4 +1,5 @@
 import copy
+import json
 
 def log_splitter(log):
     time_position = log.find(':') + 3
@@ -16,18 +17,10 @@ def log_splitter(log):
         init_game()
     elif action == 'ShutdownGame':
         shutdown_game()
-    elif action == 'Item':
-        item()
     elif action == 'Kill':
         score_kill(action_info)
-    elif action == 'Exit':
-        exit_action()
-    elif action == 'ClientConnect':
-        client_connect()
     elif action == 'ClientUserinfoChanged':
         userinfo_changed(action_info)
-    elif action == 'ClientBegin':
-        client_begin()
     elif action == 'ClientDisconnect':
         client_disconnect(action_info)
 
@@ -42,22 +35,35 @@ def init_game():
 
 def shutdown_game():
     global current_game
+    global games_list
     global active_players
+
+    for key in active_players:
+        aux = {active_players[key][0]: active_players[key][1]}
+        games_list[current_game]['kills'].append(aux)
+
     active_players.clear()
     current_game += 1
 
 
 def score_kill(kill_info):
-    # print(kill_info)
-    print()
+    global current_game
+    global games_list
+    global active_players
 
+    raw_info = kill_info.split(':')[0].split(' ')
+    # raw_info has the number of the user that score the kill,
+    # the number of the player killed and the number of how he died
+    killer = raw_info[0]
+    killed = raw_info[1]
 
-def exit_action():
-    print()
-
-
-def client_connect():
-    print()
+    # World kill
+    if int(killer) == 1022:
+        active_players[killed][1] -= 1
+    # Player kill
+    else:
+        active_players[killer][1] += 1
+    games_list[current_game]['total_kills'] += 1
 
 
 def userinfo_changed(userinfo):
@@ -67,41 +73,35 @@ def userinfo_changed(userinfo):
     global games_list
     global active_players
     # Position 1 from user_split_info is the user name
-    if not (user_number in active_players.keys()):
+    if (not (user_number in active_players.keys())) or (active_players[user_number] is None):
         games_list[current_game]['players'].append(user_split_info[1])
-        active_players[user_number] = user_split_info[1]
-    elif active_players[user_number] is None:
-        games_list[current_game]['players'].append(user_split_info[1])
-        active_players[user_number] = user_split_info[1]
-
-
-def client_begin():
-    print()
+        active_players[user_number] = [user_split_info[1], 0]
 
 
 def client_disconnect(userinfo):
     global active_players
+    global current_game
+    global games_list
     key = userinfo.split('\n')[0]
-    active_players.pop(key, None)
-
-
-def item():
-    print()
+    disconnected_user = active_players.pop(key, None)
+    if disconnected_user is not None:
+        aux = {disconnected_user[0]: disconnected_user[1]}
+        games_list[current_game]['kills'].append(aux)
 
 
 f = open('qgames.log', 'r')
 
 current_game = 0
 games_list = []
+# kills has to be a list in order to accept players with the same name
 base_dict = {
     "total_kills": 0,
     "players": [],
-    "kills": {}
+    "kills": []
 }
 active_players = {}
 
 for line in f:
-    # print(line)
     log_splitter(line)
 
 print(games_list)
