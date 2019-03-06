@@ -94,13 +94,23 @@ def client_disconnect(userinfo):
 def print_game():
     global current_game
     global game_info
-    global base_dict
     global game_json
+    top_player = None
+    top_kills = 0
+    # This loop gets the top player of the match
+    for player_kills in game_info['kills']:
+        for key in player_kills:
+            if (player_kills[key] > top_kills) or (top_player is None):
+                top_kills = player_kills[key]
+                top_player = key
+            elif player_kills[key] == top_kills:
+                aux = top_player
+                top_player = [aux, key]
+
     game_name = 'game-' + str(current_game)
     game_json[game_name] = copy.deepcopy(game_info)
+    game_json[game_name]['top_player'] = top_player
 
-
-f = open('qgames.log', 'r')
 
 game_json = {}
 current_game = 0
@@ -117,8 +127,10 @@ base_dict = {
 }
 active_players = {}
 
+
 # This clear the output file
 open('data.json', 'w').close()
+f = open('qgames.log', 'r')
 
 for line in f:
     log_splitter(line)
