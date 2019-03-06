@@ -27,28 +27,30 @@ def log_splitter(log):
 
 def init_game():
     global current_game
-    global games_list
+    global game_info
     global base_dict
     new_dict = copy.deepcopy(base_dict)
-    games_list.append(new_dict)
+    game_info.clear()
+    game_info = new_dict
 
 
 def shutdown_game():
     global current_game
-    global games_list
+    global game_info
     global active_players
 
     for key in active_players:
         aux = {active_players[key][0]: active_players[key][1]}
-        games_list[current_game]['kills'].append(aux)
+        game_info['kills'].append(aux)
 
     active_players.clear()
     current_game += 1
+    print_game()
 
 
 def score_kill(kill_info):
     global current_game
-    global games_list
+    global game_info
     global active_players
 
     raw_info = kill_info.split(':')[0].split(' ')
@@ -63,36 +65,50 @@ def score_kill(kill_info):
     # Player kill
     else:
         active_players[killer][1] += 1
-    games_list[current_game]['total_kills'] += 1
+    game_info['total_kills'] += 1
 
 
 def userinfo_changed(userinfo):
     user_split_info = userinfo.split('\\')
     user_number = user_split_info[0].split(' ')[0]
     global current_game
-    global games_list
+    global game_info
     global active_players
     # Position 1 from user_split_info is the user name
     if (not (user_number in active_players.keys())) or (active_players[user_number] is None):
-        games_list[current_game]['players'].append(user_split_info[1])
+        game_info['players'].append(user_split_info[1])
         active_players[user_number] = [user_split_info[1], 0]
 
 
 def client_disconnect(userinfo):
     global active_players
     global current_game
-    global games_list
+    global game_info
     key = userinfo.split('\n')[0]
     disconnected_user = active_players.pop(key, None)
     if disconnected_user is not None:
         aux = {disconnected_user[0]: disconnected_user[1]}
-        games_list[current_game]['kills'].append(aux)
+        game_info['kills'].append(aux)
+
+
+def print_game():
+    global current_game
+    global game_info
+    global base_dict
+    global game_json
+    game_name = 'game-' + str(current_game)
+    game_json[game_name] = copy.deepcopy(game_info)
 
 
 f = open('qgames.log', 'r')
 
+game_json = {}
 current_game = 0
-games_list = []
+game_info = {
+    "total_kills": 0,
+    "players": [],
+    "kills": []
+}
 # kills has to be a list in order to accept players with the same name
 base_dict = {
     "total_kills": 0,
@@ -101,8 +117,13 @@ base_dict = {
 }
 active_players = {}
 
+# This clear the output file
+open('data.json', 'w').close()
+
 for line in f:
     log_splitter(line)
 
-print(games_list)
+f.close()
+with open('data.json', 'a+') as outfile:
+    json.dump(game_json, outfile)
 
