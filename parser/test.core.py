@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
+from .core import log_splitter
 
 
 class TestParser(unittest.TestCase):
@@ -13,6 +14,7 @@ class TestParser(unittest.TestCase):
         """
         A test test
         """
+        log_splitter("blah")
         self.assertEqual(6, 6)
 
 if __name__ == '__main__':
