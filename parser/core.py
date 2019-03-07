@@ -27,7 +27,7 @@ def log_splitter(log):
 
 
 def init_game():
-    global active_players, game_info, base_dict
+    global game_info, base_dict
 
     new_dict = copy.deepcopy(base_dict)
     game_info.clear()
