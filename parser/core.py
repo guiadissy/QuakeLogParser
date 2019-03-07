@@ -76,6 +76,8 @@ class Parser:
             self.userinfo_changed(action_info)
         elif action == 'ClientDisconnect':
             self.client_disconnect(action_info)
+        elif action == 'ClientBegin':
+            self.client_begin(action_info)
 
     def init_game(self):
         new_dict = copy.deepcopy(self.base_dict)
@@ -92,8 +94,6 @@ class Parser:
         self.print_game()
 
     def score_kill(self, kill_info):
-        global active_players, current_game, game_info, death_causes
-
         raw_info = kill_info.split(':')[0].split(' ')
         # raw_info has the number of the user that score the kill,
         # the number of the player killed and the number of how he died
@@ -118,9 +118,11 @@ class Parser:
         user_number = user_split_info[0].split(' ')[0]
 
         # Position 1 from user_split_info is the user name
-        if (not (user_number in self.active_players.keys())) or (self.active_players[user_number] is None):
-            self.game_info[self.PLAYERS].append(user_split_info[1])
-            self.active_players[user_number] = [user_split_info[1], 0]
+        self.active_players[user_number] = [user_split_info[1], 0]
+
+    def client_begin(self, userinfo):
+        key = userinfo.split('\n')[0]
+        self.game_info[self.PLAYERS].append(self.active_players[key][0])
 
     def client_disconnect(self, userinfo):
         key = userinfo.split('\n')[0]
@@ -174,4 +176,3 @@ if __name__ == "__main__":
     # Puts the output on a .json file
     with open(output_file, 'a+') as outfile:
         json.dump(Parser.game_json, outfile)
-
